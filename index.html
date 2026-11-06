@@ -232,6 +232,37 @@
       text-align: center;
     }
 
+    .lap-list {
+      display: grid;
+      gap: 8px;
+      list-style: none;
+      margin: 0 0 22px;
+      max-height: 150px;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    .lap-list:empty {
+      display: none;
+    }
+
+    .lap-item {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      color: var(--muted);
+      display: flex;
+      font-size: 0.9rem;
+      justify-content: space-between;
+      padding: 9px 12px;
+    }
+
+    .lap-time {
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
     .stopwatch-actions button {
       font-size: 0.95rem;
     }
@@ -330,8 +361,10 @@
       <div class="dialog-kicker">Race timer</div>
       <h2>Stopwatch</h2>
       <div class="stopwatch-display" id="stopwatchDisplay" aria-live="polite">00:00.00</div>
+      <ol class="lap-list" id="lapList" aria-label="Recorded laps"></ol>
       <div class="dialog-actions stopwatch-actions">
         <button class="reset" id="resetStopwatch" type="button">Reset</button>
+        <button class="reset" id="lapStopwatch" type="button">Lap</button>
         <button class="stop" id="stopStopwatch" type="button">Stop</button>
         <button class="close" id="closeStopwatch" type="button">Close</button>
       </div>
@@ -355,6 +388,8 @@
     const stopStopwatch = document.querySelector("#stopStopwatch");
     const resetStopwatch = document.querySelector("#resetStopwatch");
     const closeStopwatch = document.querySelector("#closeStopwatch");
+    const lapStopwatch = document.querySelector("#lapStopwatch");
+    const lapList = document.querySelector("#lapList");
     const audios = {
       whistle: document.querySelector("#whistleAudio"),
       marks: document.querySelector("#marksAudio"),
@@ -365,6 +400,7 @@
     let stopwatchStartedAt = 0;
     let stopwatchElapsed = 0;
     let stopwatchTimer = null;
+    let lapNumber = 0;
 
     function setStatus(message, state = "ready") {
       statusText.textContent = message;
@@ -396,6 +432,8 @@
 
     function startStopwatch() {
       stopwatchElapsed = 0;
+      lapNumber = 0;
+      lapList.replaceChildren();
       stopwatchStartedAt = performance.now();
       stopwatchDisplay.textContent = "00:00.00";
       clearInterval(stopwatchTimer);
@@ -414,7 +452,18 @@
     function resetStopwatchTimer() {
       stopStopwatchTimer();
       stopwatchElapsed = 0;
+      lapNumber = 0;
+      lapList.replaceChildren();
       stopwatchDisplay.textContent = "00:00.00";
+    }
+
+    function recordLap() {
+      if (stopwatchTimer === null) updateStopwatch();
+      lapNumber += 1;
+      const lapItem = document.createElement("li");
+      lapItem.className = "lap-item";
+      lapItem.innerHTML = `<span>Lap ${lapNumber}</span><span class="lap-time">${formatStopwatch(stopwatchElapsed)}</span>`;
+      lapList.prepend(lapItem);
     }
 
     whistleButton.addEventListener("click", () => {
@@ -447,6 +496,7 @@
 
     stopStopwatch.addEventListener("click", stopStopwatchTimer);
     resetStopwatch.addEventListener("click", resetStopwatchTimer);
+    lapStopwatch.addEventListener("click", recordLap);
     closeStopwatch.addEventListener("click", () => {
       stopStopwatchTimer();
       stopwatchDialog.close();
