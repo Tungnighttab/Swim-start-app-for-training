@@ -246,6 +246,11 @@
       color: var(--text);
     }
 
+    .stopwatch-actions .close {
+      background: #173144;
+      color: var(--text);
+    }
+
     @media (max-width: 680px) {
       body { padding: 16px; }
       .header { display: block; }
@@ -328,6 +333,7 @@
       <div class="dialog-actions stopwatch-actions">
         <button class="reset" id="resetStopwatch" type="button">Reset</button>
         <button class="stop" id="stopStopwatch" type="button">Stop</button>
+        <button class="close" id="closeStopwatch" type="button">Close</button>
       </div>
     </div>
   </dialog>
@@ -348,6 +354,7 @@
     const stopwatchDisplay = document.querySelector("#stopwatchDisplay");
     const stopStopwatch = document.querySelector("#stopStopwatch");
     const resetStopwatch = document.querySelector("#resetStopwatch");
+    const closeStopwatch = document.querySelector("#closeStopwatch");
     const audios = {
       whistle: document.querySelector("#whistleAudio"),
       marks: document.querySelector("#marksAudio"),
@@ -440,6 +447,10 @@
 
     stopStopwatch.addEventListener("click", stopStopwatchTimer);
     resetStopwatch.addEventListener("click", resetStopwatchTimer);
+    closeStopwatch.addEventListener("click", () => {
+      stopStopwatchTimer();
+      stopwatchDialog.close();
+    });
   </script>
 </body>
 </html>
