@@ -217,6 +217,35 @@
     .cancel { background: #244356; color: var(--text); }
     .confirm { background: var(--green); color: #052519; }
 
+    #stopwatchDialog {
+      max-width: min(520px, calc(100vw - 32px));
+    }
+
+    .stopwatch-display {
+      color: var(--cyan);
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(3.2rem, 13vw, 6.4rem);
+      font-weight: 850;
+      letter-spacing: -0.06em;
+      line-height: 1;
+      margin: 22px 0 26px;
+      text-align: center;
+    }
+
+    .stopwatch-actions button {
+      font-size: 0.95rem;
+    }
+
+    .stopwatch-actions .stop {
+      background: var(--red);
+      color: #280707;
+    }
+
+    .stopwatch-actions .reset {
+      background: #244356;
+      color: var(--text);
+    }
+
     @media (max-width: 680px) {
       body { padding: 16px; }
       .header { display: block; }
@@ -291,6 +320,18 @@
     </div>
   </dialog>
 
+  <dialog id="stopwatchDialog">
+    <div class="dialog-content">
+      <div class="dialog-kicker">Race timer</div>
+      <h2>Stopwatch</h2>
+      <div class="stopwatch-display" id="stopwatchDisplay" aria-live="polite">00:00.00</div>
+      <div class="dialog-actions stopwatch-actions">
+        <button class="reset" id="resetStopwatch" type="button">Reset</button>
+        <button class="stop" id="stopStopwatch" type="button">Stop</button>
+      </div>
+    </div>
+  </dialog>
+
   <audio id="whistleAudio" src="audio/whistle.mp3" preload="auto"></audio>
   <audio id="marksAudio" src="audio/take-your-marks.mp3" preload="auto"></audio>
   <audio id="startAudio" src="audio/start.mp3" preload="auto"></audio>
@@ -303,6 +344,10 @@
     const statusText = document.querySelector("#statusText");
     const statusDot = document.querySelector("#statusDot");
     const stepText = document.querySelector("#stepText");
+    const stopwatchDialog = document.querySelector("#stopwatchDialog");
+    const stopwatchDisplay = document.querySelector("#stopwatchDisplay");
+    const stopStopwatch = document.querySelector("#stopStopwatch");
+    const resetStopwatch = document.querySelector("#resetStopwatch");
     const audios = {
       whistle: document.querySelector("#whistleAudio"),
       marks: document.querySelector("#marksAudio"),
@@ -310,6 +355,9 @@
     };
 
     let step = 1;
+    let stopwatchStartedAt = 0;
+    let stopwatchElapsed = 0;
+    let stopwatchTimer = null;
 
     function setStatus(message, state = "ready") {
       statusText.textContent = message;
@@ -325,6 +373,41 @@
       audios[name].play().catch(() => {
         setStatus("Audio could not play. Check browser audio permissions.", "active");
       });
+    }
+
+    function formatStopwatch(milliseconds) {
+      const centiseconds = Math.floor(milliseconds / 10) % 100;
+      const seconds = Math.floor(milliseconds / 1000) % 60;
+      const minutes = Math.floor(milliseconds / 60000);
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
+    }
+
+    function updateStopwatch() {
+      stopwatchElapsed = performance.now() - stopwatchStartedAt;
+      stopwatchDisplay.textContent = formatStopwatch(stopwatchElapsed);
+    }
+
+    function startStopwatch() {
+      stopwatchElapsed = 0;
+      stopwatchStartedAt = performance.now();
+      stopwatchDisplay.textContent = "00:00.00";
+      clearInterval(stopwatchTimer);
+      stopwatchTimer = setInterval(updateStopwatch, 10);
+      stopwatchDialog.showModal();
+    }
+
+    function stopStopwatchTimer() {
+      if (stopwatchTimer !== null) {
+        updateStopwatch();
+        clearInterval(stopwatchTimer);
+        stopwatchTimer = null;
+      }
+    }
+
+    function resetStopwatchTimer() {
+      stopStopwatchTimer();
+      stopwatchElapsed = 0;
+      stopwatchDisplay.textContent = "00:00.00";
     }
 
     whistleButton.addEventListener("click", () => {
@@ -350,9 +433,13 @@
       step = 1;
       marksButton.disabled = true;
       startButton.disabled = true;
+      startStopwatch();
       setStatus("Start signal sent — race in progress", "active");
       setTimeout(() => setStatus("Ready for the long whistle", "ready"), 3500);
     });
+
+    stopStopwatch.addEventListener("click", stopStopwatchTimer);
+    resetStopwatch.addEventListener("click", resetStopwatchTimer);
   </script>
 </body>
 </html>
