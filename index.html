@@ -395,6 +395,14 @@
       marks: document.querySelector("#marksAudio"),
       start: document.querySelector("#startAudio")
     };
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContextClass();
+    const audioGain = audioContext.createGain();
+    audioGain.gain.value = 1.8;
+    audioGain.connect(audioContext.destination);
+    Object.values(audios).forEach((audio) => {
+      audioContext.createMediaElementSource(audio).connect(audioGain);
+    });
 
     let step = 1;
     let stopwatchStartedAt = 0;
@@ -413,6 +421,7 @@
         audio.pause();
         audio.currentTime = 0;
       });
+      audioContext.resume();
       audios[name].play().catch(() => {
         setStatus("Audio could not play. Check browser audio permissions.", "active");
       });
