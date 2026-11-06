@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Swim Start Sequence</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --navy: #07162f;
+      --blue: #123766;
+      --cyan: #45d5ff;
+      --white: #f5fbff;
+      --muted: #a7bdd3;
+      --line: rgba(255,255,255,.13);
+      --shadow: 0 24px 70px rgba(0,0,0,.3);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 50% -10%, rgba(69,213,255,.22), transparent 42%),
+        linear-gradient(145deg, #041022, var(--navy) 55%, #0c2850);
+    }
+
+    main {
+      width: min(940px, 100%);
+      padding: clamp(24px, 5vw, 52px);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: rgba(6, 21, 47, .77);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--cyan);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: .98;
+      letter-spacing: -.05em;
+    }
+
+    .intro {
+      max-width: 650px;
+      margin: 18px 0 30px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.55;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 50px;
+      margin-bottom: 26px;
+      padding: 13px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--muted);
+      background: rgba(255,255,255,.04);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #70869e;
+      box-shadow: 0 0 0 5px rgba(112,134,158,.14);
+    }
+
+    .status.live { color: var(--white); }
+    .status.live .status-dot {
+      background: #50edab;
+      box-shadow: 0 0 0 5px rgba(80,237,171,.14);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    button {
+      min-height: 190px;
+      padding: 24px 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 22px;
+      color: var(--white);
+      cursor: pointer;
+      text-align: left;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,255,255,.48);
+      box-shadow: 0 14px 30px rgba(0,0,0,.2);
+      filter: brightness(1.08);
+    }
+
+    button:active { transform: translateY(-1px) scale(.99); }
+    button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
+
+    .step {
+      display: block;
+      margin-bottom: 38px;
+      color: rgba(255,255,255,.7);
+      font-size: .8rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+
+    .hint {
+      display: block;
+      color: rgba(255,255,255,.74);
+      font-size: .88rem;
+      line-height: 1.4;
+    }
+
+    .whistle { background: linear-gradient(145deg, #174a79, #126c88); }
+    .marks { background: linear-gradient(145deg, #4a2d84, #75458d); }
+    .start { background: linear-gradient(145deg, #9b3b38, #d86b37); }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(1, 8, 20, .72);
+      backdrop-filter: blur(7px);
+    }
+
+    .modal[hidden] { display: none; }
+
+    .modal-card {
+      width: min(520px, 100%);
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 24px;
+      background: #10284c;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-card h2 {
+      margin: 0 0 12px;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+    }
+
+    .modal-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .modal-actions button {
+      min-height: auto;
+      padding: 13px 18px;
+      text-align: center;
+    }
+
+    .cancel-button { background: rgba(255,255,255,.09); }
+    .confirm-button { background: linear-gradient(145deg, #9b3b38, #d86b37); }
+
+    @media (max-width: 430px) {
+      .modal-actions { flex-direction: column-reverse; }
+      .modal-actions button { width: 100%; }
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    kbd {
+      padding: 3px 7px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--white);
+      background: rgba(255,255,255,.08);
+      font-family: inherit;
+    }
+
+    @media (max-width: 700px) {
+      .controls { grid-template-columns: 1fr; }
+      button { min-height: 130px; }
+      .step { margin-bottom: 18px; }
+      .footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Pool deck control</p>
+    <h1>Swim start sequence</h1>
+    <p class="intro">Trigger the official calls from left to right. Each button uses the MP3 supplied for that call.</p>
+
+    <div class="status" id="status" role="status" aria-live="polite">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="statusText">Ready for the first call.</span>
+    </div>
+
+    <section class="controls" aria-label="Swim start calls">
+      <button class="whistle" id="whistleButton" type="button">
+        <span class="step">01 / SET</span>
+        <span class="label">Long whistle</span>
+        <span class="hint">Make the long whistle call</span>
+      </button>
+      <button class="marks" id="marksButton" type="button">
+        <span class="step">02 / PREPARE</span>
+        <span class="label">Take your marks</span>
+        <span class="hint">Call the swimmers to their marks</span>
+      </button>
+      <button class="start" id="startButton" type="button">
+        <span class="step">03 / START</span>
+        <span class="label">Start</span>
+        <span class="hint">Play the start sound and call “Start”</span>
+      </button>
+    </section>
+
+    <div class="footer">
+      <span>Use the buttons in any order if needed.</span>
+      <span>Keyboard: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span>
+    </div>
+  </main>
+
+  <div class="modal" id="startModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+    <div class="modal-card">
+      <h2 id="modalTitle">Ready to start?</h2>
+      <p>Confirm that all athletes are standing still before the start sound is played.</p>
+      <div class="modal-actions">
+        <button class="cancel-button" id="cancelStartButton" type="button">Cancel</button>
+        <button class="confirm-button" id="confirmStartButton" type="button">Yes, all athletes are still</button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="whistleAudio" preload="auto" src="whistle.mp3"></audio>
+  <audio id="marksAudio" preload="auto" src="take-your-marks.mp3"></audio>
+  <audio id="startAudio" preload="auto" src="start-sound.mp3"></audio>
+
+  <script>
+    const calls = {
+      whistle: {
+        button: document.getElementById("whistleButton"),
+        audio: document.getElementById("whistleAudio"),
+        message: "Long whistle call played."
+      },
+      marks: {
+        button: document.getElementById("marksButton"),
+        audio: document.getElementById("marksAudio"),
+        message: "“Take your marks” call played."
+      },
+      start: {
+        button: document.getElementById("startButton"),
+        audio: document.getElementById("startAudio"),
+        message: "Start sound played."
+      }
+    };
+
+    const status = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+    const startModal = document.getElementById("startModal");
+    const cancelStartButton = document.getElementById("cancelStartButton");
+    const confirmStartButton = document.getElementById("confirmStartButton");
+
+    function stopAllAudio() {
+      Object.values(calls).forEach(({ audio }) => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+    }
+
+    function playCall(name) {
+      const call = calls[name];
+      stopAllAudio();
+      call.audio.currentTime = 0;
+      call.audio.play().catch(() => {
+        statusText.textContent = "Press the button again to allow audio playback.";
+        status.classList.remove("live");
+      });
+      statusText.textContent = call.message;
+      status.classList.add("live");
+    }
+
+    function openStartConfirmation() {
+      startModal.hidden = false;
+      confirmStartButton.focus();
+    }
+
+    function closeStartConfirmation() {
+      startModal.hidden = true;
+      calls.start.button.focus();
+    }
+
+    Object.entries(calls).forEach(([name, call]) => {
+      call.button.addEventListener("click", () => {
+        if (name === "start") {
+          openStartConfirmation();
+        } else {
+          playCall(name);
+        }
+      });
+    });
+
+    cancelStartButton.addEventListener("click", closeStartConfirmation);
+    confirmStartButton.addEventListener("click", () => {
+      closeStartConfirmation();
+      playCall("start");
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const keyMap = { "1": "whistle", "2": "marks", "3": "start" };
+      if (keyMap[event.key] === "start") {
+        openStartConfirmation();
+      } else if (keyMap[event.key]) {
+        playCall(keyMap[event.key]);
+      }
+      if (event.key === "Escape" && !startModal.hidden) closeStartConfirmation();
+    });
+  </script>
+</body>
+</html>
