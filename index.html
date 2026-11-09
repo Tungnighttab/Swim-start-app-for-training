@@ -513,6 +513,8 @@
     document.querySelector("#cancelStart").addEventListener("click", () => {
       stationaryDialog.close();
       play("pleaseStand");
+      step = 3;
+      startButton.disabled = true;
       setStatus("Please stand — waiting for athletes to be stationary", "active");
     });
 
