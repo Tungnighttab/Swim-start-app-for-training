@@ -122,7 +122,7 @@
 
     .sequence {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 14px;
     }
 
@@ -144,7 +144,8 @@
     .control:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
     .control:disabled { cursor: not-allowed; opacity: 0.5; transform: none; }
 
-    .control-whistle { background: linear-gradient(145deg, #1a4b67, #103248); }
+    .control-block { background: linear-gradient(145deg, #1a4b67, #103248); }
+    .control-stand { background: linear-gradient(145deg, #5c416e, #3c2c5b); }
     .control-marks { background: linear-gradient(145deg, #30506e, #182f49); }
     .control-start {
       background: linear-gradient(145deg, #247c79, #104b55);
@@ -302,7 +303,7 @@
         <h1>Swim start sequence</h1>
         <p>Run the official sequence with one clear control for each call. The start signal asks for a final stationary check first.</p>
       </div>
-      <div class="badge">3-STEP START</div>
+      <div class="badge">4-STEP START</div>
     </header>
 
     <section class="status-card" aria-live="polite">
@@ -310,29 +311,36 @@
         <span class="status-dot" id="statusDot"></span>
         <div>
           <div class="status-label">Sequence status</div>
-          <div id="statusText">Ready for the long whistle</div>
+          <div id="statusText">Ready to call athletes to the starting block</div>
         </div>
       </div>
     </section>
 
     <section class="sequence" aria-label="Swim start controls">
-      <button class="control control-whistle" id="whistleButton" type="button">
-        <span class="number">01 / SET</span>
-        <span class="icon" aria-hidden="true">〰</span>
-        <span class="control-title">Long whistle</span>
-        <span class="control-copy">Signal athletes to take their places.</span>
+      <button class="control control-block" id="blockButton" type="button">
+        <span class="number">01 / CALL</span>
+        <span class="icon" aria-hidden="true">1</span>
+        <span class="control-title">To the starting block</span>
+        <span class="control-copy">Call athletes to the starting block.</span>
+      </button>
+
+      <button class="control control-stand" id="standButton" type="button" disabled>
+        <span class="number">02 / BLOCK</span>
+        <span class="icon" aria-hidden="true">2</span>
+        <span class="control-title">Stand on the block</span>
+        <span class="control-copy">Tell athletes to stand on the block.</span>
       </button>
 
       <button class="control control-marks" id="marksButton" type="button" disabled>
-        <span class="number">02 / CALL</span>
-        <span class="icon" aria-hidden="true">✦</span>
+        <span class="number">03 / CALL</span>
+        <span class="icon" aria-hidden="true">3</span>
         <span class="control-title">Take your marks</span>
         <span class="control-copy">Call the swimmers into the starting position.</span>
       </button>
 
       <button class="control control-start" id="startButton" type="button" disabled>
-        <span class="number">03 / START</span>
-        <span class="icon" aria-hidden="true">▶</span>
+        <span class="number">04 / START</span>
+        <span class="icon" aria-hidden="true">4</span>
         <span class="control-title">Start</span>
         <span class="control-copy">Confirm everyone is stationary, then play the start signal.</span>
       </button>
@@ -340,7 +348,7 @@
 
     <div class="footer">
       <span>Use the buttons in order for a clean, consistent start.</span>
-      <span id="stepText">Step 1 of 3</span>
+      <span id="stepText">Step 1 of 4</span>
     </div>
   </main>
 
@@ -371,12 +379,14 @@
     </div>
   </dialog>
 
-  <audio id="whistleAudio" src="audio/whistle.mp3" preload="auto"></audio>
+  <audio id="blockAudio" src="audio/call-to-block.mp3" preload="auto"></audio>
+  <audio id="standAudio" src="audio/longwhistle.mp3" preload="auto"></audio>
   <audio id="marksAudio" src="audio/take-your-marks.mp3" preload="auto"></audio>
   <audio id="startAudio" src="audio/start.mp3" preload="auto"></audio>
 
   <script>
-    const whistleButton = document.querySelector("#whistleButton");
+    const blockButton = document.querySelector("#blockButton");
+    const standButton = document.querySelector("#standButton");
     const marksButton = document.querySelector("#marksButton");
     const startButton = document.querySelector("#startButton");
     const stationaryDialog = document.querySelector("#stationaryDialog");
@@ -391,7 +401,8 @@
     const lapStopwatch = document.querySelector("#lapStopwatch");
     const lapList = document.querySelector("#lapList");
     const audios = {
-      whistle: document.querySelector("#whistleAudio"),
+      block: document.querySelector("#blockAudio"),
+      stand: document.querySelector("#standAudio"),
       marks: document.querySelector("#marksAudio"),
       start: document.querySelector("#startAudio")
     };
@@ -413,7 +424,7 @@
     function setStatus(message, state = "ready") {
       statusText.textContent = message;
       statusDot.className = `status-dot ${state}`;
-      stepText.textContent = `Step ${step} of 3`;
+      stepText.textContent = `Step ${step} of 4`;
     }
 
     function play(name) {
@@ -475,32 +486,45 @@
       lapList.prepend(lapItem);
     }
 
-    whistleButton.addEventListener("click", () => {
-      play("whistle");
+    blockButton.addEventListener("click", () => {
+      play("block");
       step = 2;
+      standButton.disabled = false;
+      setStatus("Call to starting block sent — ready to tell athletes to stand on the block", "active");
+    });
+
+    standButton.addEventListener("click", () => {
+      play("stand");
+      step = 3;
       marksButton.disabled = false;
-      setStatus("Whistle sent — ready for take your marks", "active");
+      setStatus("Stand on the block call sent — ready for take your marks", "active");
     });
 
     marksButton.addEventListener("click", () => {
       play("marks");
-      step = 3;
+      step = 4;
       startButton.disabled = false;
       setStatus("Take your marks sent — confirm athletes are stationary", "active");
     });
 
     startButton.addEventListener("click", () => stationaryDialog.showModal());
-    document.querySelector("#cancelStart").addEventListener("click", () => stationaryDialog.close());
+    document.querySelector("#cancelStart").addEventListener("click", () => {
+      stationaryDialog.close();
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance("Please stand"));
+      setStatus("Please stand — waiting for athletes to be stationary", "active");
+    });
 
     document.querySelector("#confirmStart").addEventListener("click", () => {
       stationaryDialog.close();
       play("start");
       step = 1;
+      standButton.disabled = true;
       marksButton.disabled = true;
       startButton.disabled = true;
       startStopwatch();
       setStatus("Start signal sent — race in progress", "active");
-      setTimeout(() => setStatus("Ready for the long whistle", "ready"), 3500);
+      setTimeout(() => setStatus("Ready to call athletes to the starting block", "ready"), 3500);
     });
 
     stopStopwatch.addEventListener("click", stopStopwatchTimer);
