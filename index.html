@@ -383,6 +383,7 @@
   <audio id="standAudio" src="audio/longwhistle.mp3" preload="auto"></audio>
   <audio id="marksAudio" src="audio/take-your-marks.mp3" preload="auto"></audio>
   <audio id="startAudio" src="audio/start.mp3" preload="auto"></audio>
+  <audio id="pleaseStandAudio" src="audio/please-stand.m4a" preload="auto"></audio>
 
   <script>
     const blockButton = document.querySelector("#blockButton");
@@ -404,7 +405,8 @@
       block: document.querySelector("#blockAudio"),
       stand: document.querySelector("#standAudio"),
       marks: document.querySelector("#marksAudio"),
-      start: document.querySelector("#startAudio")
+      start: document.querySelector("#startAudio"),
+      pleaseStand: document.querySelector("#pleaseStandAudio")
     };
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     const audioContext = new AudioContextClass();
@@ -510,8 +512,7 @@
     startButton.addEventListener("click", () => stationaryDialog.showModal());
     document.querySelector("#cancelStart").addEventListener("click", () => {
       stationaryDialog.close();
-      speechSynthesis.cancel();
-      speechSynthesis.speak(new SpeechSynthesisUtterance("Please stand"));
+      play("pleaseStand");
       setStatus("Please stand — waiting for athletes to be stationary", "active");
     });
 
