@@ -16,6 +16,8 @@
       --green: #64e6a1;
       --yellow: #ffd166;
       --red: #ff6b6b;
+      --pool-blue: #087da5;
+      --lane-yellow: #f7d45c;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -24,17 +26,65 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background:
-        radial-gradient(circle at 50% -10%, #1b5975 0, transparent 42%),
-        linear-gradient(160deg, #0b2232 0%, var(--navy) 62%);
+      background: #041522;
       color: var(--text);
       display: grid;
       place-items: center;
       padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .pool-water {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(90deg, transparent 0 8%, rgba(255,255,255,.12) 8.15% 8.35%, transparent 8.5% 32%, rgba(255,255,255,.1) 32.15% 32.35%, transparent 32.5% 61%, rgba(255,255,255,.1) 61.15% 61.35%, transparent 61.5% 89%, rgba(255,255,255,.1) 89.15% 89.35%, transparent 89.5%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 2px, transparent 2px 12px),
+        linear-gradient(180deg, #0c8ab0 0%, #075a86 42%, #042c54 100%);
+      filter: saturate(1.15);
+    }
+
+    .pool-water::before,
+    .pool-water::after {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      background: repeating-linear-gradient(165deg, transparent 0 45px, rgba(137,239,255,.1) 48px 51px, transparent 54px 100px);
+      animation: water-shimmer 16s linear infinite;
+    }
+
+    .pool-water::after {
+      opacity: .5;
+      animation-direction: reverse;
+      animation-duration: 22s;
+    }
+
+    @keyframes water-shimmer {
+      from { transform: translate3d(-4%, -2%, 0); }
+      to { transform: translate3d(4%, 2%, 0); }
+    }
+
+    .pool-lanes {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: .45;
+      background:
+        linear-gradient(90deg, transparent 0 19%, var(--lane-yellow) 19.2% 19.45%, transparent 19.65% 49%, var(--lane-yellow) 49.2% 49.45%, transparent 49.65% 79%, var(--lane-yellow) 79.2% 79.45%, transparent 79.65%),
+        radial-gradient(ellipse at 50% 110%, rgba(0,0,0,.4), transparent 62%);
+      pointer-events: none;
     }
 
     main {
       width: min(940px, 100%);
+      background: rgba(3, 25, 50, .72);
+      border: 1px solid rgba(167, 239, 255, .26);
+      border-radius: 30px;
+      box-shadow: 0 28px 90px rgba(0, 11, 33, .45), inset 0 1px rgba(255,255,255,.12);
+      padding: clamp(22px, 4vw, 42px);
+      backdrop-filter: blur(14px);
     }
 
     .header {
@@ -52,6 +102,24 @@
       letter-spacing: 0.15em;
       text-transform: uppercase;
       margin: 0 0 8px;
+    }
+
+    .brand-line {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+    }
+
+    .swimmer-mark {
+      align-items: center;
+      background: rgba(69, 217, 255, .14);
+      border: 1px solid rgba(69, 217, 255, .45);
+      border-radius: 15px;
+      display: inline-flex;
+      font-size: 1.8rem;
+      height: 48px;
+      justify-content: center;
+      width: 48px;
     }
 
     h1 {
@@ -144,6 +212,17 @@
     .control:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
     .control:disabled { cursor: not-allowed; opacity: 0.5; transform: none; }
 
+    .control::after {
+      background: rgba(255,255,255,.16);
+      border-radius: 50%;
+      content: "";
+      height: 90px;
+      position: absolute;
+      right: -25px;
+      top: -25px;
+      width: 90px;
+    }
+
     .control-block { background: linear-gradient(145deg, #1a4b67, #103248); }
     .control-stand { background: linear-gradient(145deg, #5c416e, #3c2c5b); }
     .control-marks { background: linear-gradient(145deg, #30506e, #182f49); }
@@ -163,6 +242,8 @@
       display: block;
       font-size: 2.7rem;
       margin: 25px 0 14px;
+      position: relative;
+      z-index: 1;
     }
 
     .control-title {
@@ -296,10 +377,15 @@
   </style>
 </head>
 <body>
+  <div class="pool-water" aria-hidden="true"></div>
+  <div class="pool-lanes" aria-hidden="true"></div>
   <main>
     <header class="header">
       <div>
-        <p class="eyebrow">Pool deck control</p>
+        <div class="brand-line">
+          <span class="swimmer-mark" aria-hidden="true">🏊</span>
+          <p class="eyebrow">Pool deck control</p>
+        </div>
         <h1>Swim start sequence</h1>
         <p>Run the official sequence with one clear control for each call. The start signal asks for a final stationary check first.</p>
       </div>
@@ -319,28 +405,28 @@
     <section class="sequence" aria-label="Swim start controls">
       <button class="control control-block" id="blockButton" type="button">
         <span class="number">01 / CALL</span>
-        <span class="icon" aria-hidden="true">1</span>
+        <span class="icon" aria-hidden="true">🏊‍♂️</span>
         <span class="control-title">To the starting block</span>
         <span class="control-copy">Call athletes to the starting block.</span>
       </button>
 
       <button class="control control-stand" id="standButton" type="button" disabled>
         <span class="number">02 / BLOCK</span>
-        <span class="icon" aria-hidden="true">2</span>
+        <span class="icon" aria-hidden="true">🧍</span>
         <span class="control-title">Stand on the block</span>
         <span class="control-copy">Tell athletes to stand on the block.</span>
       </button>
 
       <button class="control control-marks" id="marksButton" type="button" disabled>
         <span class="number">03 / CALL</span>
-        <span class="icon" aria-hidden="true">3</span>
+        <span class="icon" aria-hidden="true">🏊‍♀️</span>
         <span class="control-title">Take your marks</span>
         <span class="control-copy">Call the swimmers into the starting position.</span>
       </button>
 
       <button class="control control-start" id="startButton" type="button" disabled>
         <span class="number">04 / START</span>
-        <span class="icon" aria-hidden="true">4</span>
+        <span class="icon" aria-hidden="true">🏁</span>
         <span class="control-title">Start</span>
         <span class="control-copy">Confirm everyone is stationary, then play the start signal.</span>
       </button>
