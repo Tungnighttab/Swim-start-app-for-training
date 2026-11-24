@@ -78,13 +78,47 @@
     }
 
     main {
-      width: min(940px, 100%);
+      width: min(1160px, 100%);
       background: rgba(3, 25, 50, .72);
       border: 1px solid rgba(167, 239, 255, .26);
       border-radius: 30px;
       box-shadow: 0 28px 90px rgba(0, 11, 33, .45), inset 0 1px rgba(255,255,255,.12);
       padding: clamp(22px, 4vw, 42px);
       backdrop-filter: blur(14px);
+    }
+
+    .meet-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 24px 0 18px;
+    }
+
+    .meet-field {
+      background: rgba(3, 18, 38, .56);
+      border: 1px solid rgba(167, 239, 255, .16);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .meet-field small {
+      color: var(--muted);
+      display: block;
+      font-size: .68rem;
+      font-weight: 850;
+      letter-spacing: .12em;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .meet-field strong {
+      font-size: .95rem;
+    }
+
+    .race-layout {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) 250px;
     }
 
     .header {
@@ -156,6 +190,9 @@
       padding: 22px;
     }
 
+    .status-card.ready { border-color: rgba(100, 230, 161, .46); }
+    .status-card.active { border-color: rgba(69, 217, 255, .62); }
+
     .status-row {
       display: flex;
       align-items: center;
@@ -188,6 +225,15 @@
       font-weight: 750;
     }
 
+    .status-kicker {
+      color: var(--cyan);
+      font-size: .7rem;
+      font-weight: 850;
+      letter-spacing: .12em;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
     .sequence {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -211,6 +257,9 @@
     .control:active { transform: translateY(-1px) scale(0.99); }
     .control:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
     .control:disabled { cursor: not-allowed; opacity: 0.5; transform: none; }
+    .control.active-step { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(69, 217, 255, .18), 0 14px 34px rgba(0, 0, 0, .22); }
+    .control.completed { border-color: rgba(100, 230, 161, .65); }
+    .control.completed .number::after { color: var(--green); content: "  ✓"; }
 
     .control::after {
       background: rgba(255,255,255,.16);
@@ -259,6 +308,56 @@
       font-size: 0.9rem;
       line-height: 1.4;
     }
+
+    .race-panel {
+      align-self: start;
+      background: linear-gradient(160deg, rgba(7, 42, 72, .94), rgba(4, 23, 48, .94));
+      border: 1px solid rgba(167, 239, 255, .24);
+      border-radius: 20px;
+      padding: 20px;
+      position: sticky;
+      top: 20px;
+    }
+
+    .race-panel-label {
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 850;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .race-state {
+      color: var(--green);
+      font-size: 1.7rem;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      margin: 10px 0 22px;
+    }
+
+    .race-panel-timer {
+      border-top: 1px solid rgba(167, 239, 255, .16);
+      color: var(--cyan);
+      font-variant-numeric: tabular-nums;
+      font-size: 2rem;
+      font-weight: 850;
+      padding-top: 18px;
+    }
+
+    .panel-button,
+    .new-race {
+      border: 0;
+      border-radius: 11px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      margin-top: 14px;
+      padding: 12px 14px;
+      width: 100%;
+    }
+
+    .panel-button { background: rgba(69, 217, 255, .15); color: var(--cyan); }
+    .new-race { background: var(--green); color: #052519; }
 
     .footer {
       color: var(--muted);
@@ -364,10 +463,16 @@
       color: var(--text);
     }
 
+    @media (max-width: 860px) {
+      .race-layout { grid-template-columns: 1fr; }
+      .race-panel { position: static; }
+    }
+
     @media (max-width: 680px) {
       body { padding: 16px; }
       .header { display: block; }
       .badge { display: inline-block; margin-top: 18px; }
+      .meet-strip { grid-template-columns: repeat(2, 1fr); }
       .sequence { grid-template-columns: 1fr; }
       .control { min-height: 150px; }
       .icon { display: inline; margin: 0 12px 0 0; }
@@ -392,49 +497,70 @@
       <div class="badge">4-STEP START</div>
     </header>
 
-    <section class="status-card" aria-live="polite">
-      <div class="status-row">
-        <span class="status-dot" id="statusDot"></span>
-        <div>
-          <div class="status-label">Sequence status</div>
-          <div id="statusText">Ready to call athletes to the starting block</div>
+    <section class="meet-strip" aria-label="Meet information">
+      <div class="meet-field"><small>Meet</small><strong>Swim Meet Control</strong></div>
+      <div class="meet-field"><small>Event</small><strong>Race start</strong></div>
+      <div class="meet-field"><small>Heat</small><strong>Ready to assign</strong></div>
+      <div class="meet-field"><small>Pool</small><strong>Competition deck</strong></div>
+    </section>
+
+    <div class="race-layout">
+      <div>
+        <section class="status-card ready" id="statusCard" aria-live="polite">
+          <div class="status-row">
+            <span class="status-dot ready" id="statusDot"></span>
+            <div>
+              <div class="status-kicker">Race state</div>
+              <div class="status-label">Sequence status</div>
+              <div id="statusText">Ready to call athletes to the starting block</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sequence" aria-label="Swim start controls">
+          <button class="control control-block active-step" id="blockButton" type="button">
+            <span class="number">01 / CALL</span>
+            <span class="icon" aria-hidden="true">🏊‍♂️</span>
+            <span class="control-title">To the starting block</span>
+            <span class="control-copy">Call athletes to the starting block.</span>
+          </button>
+
+          <button class="control control-stand" id="standButton" type="button" disabled>
+            <span class="number">02 / BLOCK</span>
+            <span class="icon" aria-hidden="true">🧍</span>
+            <span class="control-title">Stand on the block</span>
+            <span class="control-copy">Tell athletes to stand on the block.</span>
+          </button>
+
+          <button class="control control-marks" id="marksButton" type="button" disabled>
+            <span class="number">03 / CALL</span>
+            <span class="icon" aria-hidden="true">🏊‍♀️</span>
+            <span class="control-title">Take your marks</span>
+            <span class="control-copy">Call the swimmers into the starting position.</span>
+          </button>
+
+          <button class="control control-start" id="startButton" type="button" disabled>
+            <span class="number">04 / START</span>
+            <span class="icon" aria-hidden="true">🏁</span>
+            <span class="control-title">Start</span>
+            <span class="control-copy">Confirm everyone is stationary, then play the start signal.</span>
+          </button>
+        </section>
+
+        <div class="footer">
+          <span>Follow each call in order for a clean, consistent start.</span>
+          <span id="stepText">Step 1 of 4</span>
         </div>
       </div>
-    </section>
 
-    <section class="sequence" aria-label="Swim start controls">
-      <button class="control control-block" id="blockButton" type="button">
-        <span class="number">01 / CALL</span>
-        <span class="icon" aria-hidden="true">🏊‍♂️</span>
-        <span class="control-title">To the starting block</span>
-        <span class="control-copy">Call athletes to the starting block.</span>
-      </button>
-
-      <button class="control control-stand" id="standButton" type="button" disabled>
-        <span class="number">02 / BLOCK</span>
-        <span class="icon" aria-hidden="true">🧍</span>
-        <span class="control-title">Stand on the block</span>
-        <span class="control-copy">Tell athletes to stand on the block.</span>
-      </button>
-
-      <button class="control control-marks" id="marksButton" type="button" disabled>
-        <span class="number">03 / CALL</span>
-        <span class="icon" aria-hidden="true">🏊‍♀️</span>
-        <span class="control-title">Take your marks</span>
-        <span class="control-copy">Call the swimmers into the starting position.</span>
-      </button>
-
-      <button class="control control-start" id="startButton" type="button" disabled>
-        <span class="number">04 / START</span>
-        <span class="icon" aria-hidden="true">🏁</span>
-        <span class="control-title">Start</span>
-        <span class="control-copy">Confirm everyone is stationary, then play the start signal.</span>
-      </button>
-    </section>
-
-    <div class="footer">
-      <span>Use the buttons in order for a clean, consistent start.</span>
-      <span id="stepText">Step 1 of 4</span>
+      <aside class="race-panel" aria-label="Race dashboard">
+        <div class="race-panel-label">Race dashboard</div>
+        <div class="race-state" id="raceState">READY</div>
+        <div class="race-panel-label">Elapsed time</div>
+        <div class="race-panel-timer" id="panelTimer">00:00.00</div>
+        <button class="panel-button" id="openStopwatch" type="button">Open stopwatch</button>
+        <button class="new-race" id="newRace" type="button">New race</button>
+      </aside>
     </div>
   </main>
 
@@ -479,7 +605,12 @@
     const stationaryDialog = document.querySelector("#stationaryDialog");
     const statusText = document.querySelector("#statusText");
     const statusDot = document.querySelector("#statusDot");
+    const statusCard = document.querySelector("#statusCard");
     const stepText = document.querySelector("#stepText");
+    const raceState = document.querySelector("#raceState");
+    const panelTimer = document.querySelector("#panelTimer");
+    const openStopwatch = document.querySelector("#openStopwatch");
+    const newRace = document.querySelector("#newRace");
     const stopwatchDialog = document.querySelector("#stopwatchDialog");
     const stopwatchDisplay = document.querySelector("#stopwatchDisplay");
     const stopStopwatch = document.querySelector("#stopStopwatch");
@@ -512,7 +643,12 @@
     function setStatus(message, state = "ready") {
       statusText.textContent = message;
       statusDot.className = `status-dot ${state}`;
+      statusCard.className = `status-card ${state}`;
       stepText.textContent = `Step ${step} of 4`;
+      raceState.textContent = state === "active" ? (step === 4 ? "READY TO START" : `STEP 0${step}`) : "READY";
+      [blockButton, standButton, marksButton, startButton].forEach((button, index) => {
+        button.classList.toggle("active-step", !button.disabled && index + 1 === step);
+      });
     }
 
     function play(name) {
@@ -535,7 +671,9 @@
 
     function updateStopwatch() {
       stopwatchElapsed = performance.now() - stopwatchStartedAt;
-      stopwatchDisplay.textContent = formatStopwatch(stopwatchElapsed);
+      const formatted = formatStopwatch(stopwatchElapsed);
+      stopwatchDisplay.textContent = formatted;
+      panelTimer.textContent = formatted;
     }
 
     function startStopwatch() {
@@ -544,6 +682,7 @@
       lapList.replaceChildren();
       stopwatchStartedAt = performance.now();
       stopwatchDisplay.textContent = "00:00.00";
+      panelTimer.textContent = "00:00.00";
       clearInterval(stopwatchTimer);
       stopwatchTimer = setInterval(updateStopwatch, 10);
       stopwatchDialog.showModal();
@@ -563,6 +702,7 @@
       lapNumber = 0;
       lapList.replaceChildren();
       stopwatchDisplay.textContent = "00:00.00";
+      panelTimer.textContent = "00:00.00";
     }
 
     function recordLap() {
@@ -577,6 +717,7 @@
     blockButton.addEventListener("click", () => {
       play("block");
       step = 2;
+      blockButton.classList.add("completed");
       standButton.disabled = false;
       setStatus("Call to starting block sent — ready to tell athletes to stand on the block", "active");
     });
@@ -584,6 +725,7 @@
     standButton.addEventListener("click", () => {
       play("stand");
       step = 3;
+      standButton.classList.add("completed");
       marksButton.disabled = false;
       setStatus("Stand on the block call sent — ready for take your marks", "active");
     });
@@ -591,6 +733,7 @@
     marksButton.addEventListener("click", () => {
       play("marks");
       step = 4;
+      marksButton.classList.add("completed");
       startButton.disabled = false;
       setStatus("Take your marks sent — confirm athletes are stationary", "active");
     });
@@ -607,13 +750,26 @@
     document.querySelector("#confirmStart").addEventListener("click", () => {
       stationaryDialog.close();
       play("start");
-      step = 1;
+      step = 4;
       standButton.disabled = true;
       marksButton.disabled = true;
       startButton.disabled = true;
       startStopwatch();
       setStatus("Start signal sent — race in progress", "active");
-      setTimeout(() => setStatus("Ready to call athletes to the starting block", "ready"), 3500);
+      raceState.textContent = "RACE IN PROGRESS";
+    });
+
+    openStopwatch.addEventListener("click", () => stopwatchDialog.showModal());
+    newRace.addEventListener("click", () => {
+      stopStopwatchTimer();
+      stopwatchDialog.close();
+      [blockButton, standButton, marksButton, startButton].forEach((button) => {
+        button.disabled = button !== blockButton;
+        button.classList.remove("completed", "active-step");
+      });
+      step = 1;
+      panelTimer.textContent = "00:00.00";
+      setStatus("Ready to call athletes to the starting block", "ready");
     });
 
     stopStopwatch.addEventListener("click", stopStopwatchTimer);
