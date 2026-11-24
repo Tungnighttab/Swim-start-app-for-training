@@ -115,6 +115,44 @@
       font-size: .95rem;
     }
 
+    .meet-field input {
+      background: transparent;
+      border: 0;
+      color: var(--text);
+      font: inherit;
+      font-size: .95rem;
+      font-weight: 800;
+      outline: 0;
+      padding: 0;
+      width: 100%;
+    }
+
+    .meet-field input:focus {
+      border-bottom: 2px solid var(--cyan);
+    }
+
+    .meet-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin: -8px 0 16px;
+    }
+
+    .reset-meet {
+      background: transparent;
+      border: 1px solid rgba(167, 239, 255, .22);
+      border-radius: 9px;
+      color: var(--muted);
+      cursor: pointer;
+      font: inherit;
+      font-size: .75rem;
+      padding: 7px 10px;
+    }
+
+    .reset-meet:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
     .race-layout {
       display: grid;
       gap: 18px;
@@ -498,11 +536,12 @@
     </header>
 
     <section class="meet-strip" aria-label="Meet information">
-      <div class="meet-field"><small>Meet</small><strong>Swim Meet Control</strong></div>
-      <div class="meet-field"><small>Event</small><strong>Race start</strong></div>
-      <div class="meet-field"><small>Heat</small><strong>Ready to assign</strong></div>
-      <div class="meet-field"><small>Pool</small><strong>Competition deck</strong></div>
+      <label class="meet-field"><small for="meetName">Meet</small><input id="meetName" value="Swim Meet Control" aria-label="Meet name"></label>
+      <label class="meet-field"><small for="eventName">Event</small><input id="eventName" value="Race start" aria-label="Event name"></label>
+      <label class="meet-field"><small for="heatName">Heat</small><input id="heatName" value="Ready to assign" aria-label="Heat"></label>
+      <label class="meet-field"><small for="poolName">Pool</small><input id="poolName" value="Competition deck" aria-label="Pool"></label>
     </section>
+    <div class="meet-actions"><button class="reset-meet" id="resetMeet" type="button">Reset meet details</button></div>
 
     <div class="race-layout">
       <div>
@@ -611,6 +650,9 @@
     const panelTimer = document.querySelector("#panelTimer");
     const openStopwatch = document.querySelector("#openStopwatch");
     const newRace = document.querySelector("#newRace");
+    const meetFields = ["meetName", "eventName", "heatName", "poolName"].map((id) => document.querySelector(`#${id}`));
+    const resetMeet = document.querySelector("#resetMeet");
+    const defaultMeetDetails = ["Swim Meet Control", "Race start", "Ready to assign", "Competition deck"];
     const stopwatchDialog = document.querySelector("#stopwatchDialog");
     const stopwatchDisplay = document.querySelector("#stopwatchDisplay");
     const stopStopwatch = document.querySelector("#stopStopwatch");
@@ -640,6 +682,23 @@
     let stopwatchTimer = null;
     let lapNumber = 0;
 
+    function saveMeetDetails() {
+      localStorage.setItem("swim-start-meet-details", JSON.stringify(meetFields.map((field) => field.value)));
+    }
+
+    function loadMeetDetails() {
+      try {
+        const saved = JSON.parse(localStorage.getItem("swim-start-meet-details"));
+        if (Array.isArray(saved) && saved.length === meetFields.length) {
+          meetFields.forEach((field, index) => {
+            field.value = saved[index];
+          });
+        }
+      } catch {
+        localStorage.removeItem("swim-start-meet-details");
+      }
+    }
+
     function setStatus(message, state = "ready") {
       statusText.textContent = message;
       statusDot.className = `status-dot ${state}`;
@@ -650,6 +709,15 @@
         button.classList.toggle("active-step", !button.disabled && index + 1 === step);
       });
     }
+
+    meetFields.forEach((field) => field.addEventListener("input", saveMeetDetails));
+    resetMeet.addEventListener("click", () => {
+      meetFields.forEach((field, index) => {
+        field.value = defaultMeetDetails[index];
+      });
+      saveMeetDetails();
+    });
+    loadMeetDetails();
 
     function play(name) {
       Object.values(audios).forEach((audio) => {
