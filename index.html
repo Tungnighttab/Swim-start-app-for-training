@@ -61,7 +61,7 @@
 
   <section class="view training" id="training">
     <div class="section-title"><h2>Training interval timer</h2><span class="muted">Useful for pool sets and repeats</span></div>
-    <div class="training-form"><div class="field"><label for="repeats">Repeats</label><input id="repeats" type="number" min="1" value="10"></div><div class="field"><label for="distance">Distance (m)</label><input id="distance" type="number" min="1" value="100"></div><div class="field"><label for="interval">Interval (sec)</label><input id="interval" type="number" min="1" value="90"></div></div>
+    <div class="training-form"><div class="field"><label for="repeats">Repeats</label><input id="repeats" type="number" min="1" value="10"></div><div class="field"><label for="distance">Distance (m)</label><input id="distance" type="number" min="1" value="100"></div></div>
     <div class="training-card"><div class="muted" id="trainingLabel">Repeat 1 of 10</div><input class="big" id="trainingTimer" value="01:30" aria-label="Training countdown, editable as minutes and seconds"><p id="trainingMessage">Edit the clock, then start the set.</p><button class="btn primary" id="trainingStart">Start set</button><button class="btn" id="trainingStop" disabled>Stop</button><button class="btn" id="trainingReset">Reset</button></div>
   </section>
 </main>
@@ -100,16 +100,16 @@
   $("#yesStart").onclick=()=>{$("#stationary").close();play("start");begin();step=4;$("#start").disabled=true;setStatus("Start signal sent — race in progress","active")};$("#recall").onclick=()=>{stop();play("please");setStatus("Recall — athletes must stand","alert");$("#start").disabled=true;step=3};
   $("#lap").onclick=recordLap;$("#openStopwatch").onclick=()=>$("#stopwatch").showModal();$("#modalClose").onclick=()=>$("#stopwatch").close();$("#modalStop").onclick=stop;$("#modalLap").onclick=recordLap;$("#modalReset").onclick=resetStopwatch;
   ["#meet","#event","#heat","#pool"].forEach(s=>$(s).addEventListener("input",()=>{$(s+"Race").value=$(s).value;saveSetup()}));
-  let trainingLeft=90,trainingRep=1,trainingRunning=false;
+  let trainingLeft=90,trainingDuration=90,trainingRep=1,trainingRunning=false;
   function trainingFormat(seconds){return `${String(Math.floor(seconds/60)).padStart(2,"0")}:${String(seconds%60).padStart(2,"0")}`}
   function trainingParse(value){let parts=value.trim().split(":");if(parts.length===2){let minutes=Number(parts[0]),seconds=Number(parts[1]);if(Number.isInteger(minutes)&&Number.isInteger(seconds)&&minutes>=0&&seconds>=0&&seconds<60)return minutes*60+seconds}let seconds=Number(value);return Number.isInteger(seconds)&&seconds>=1?seconds:null}
   function trainingSetClock(seconds){trainingLeft=seconds;$("#trainingTimer").value=trainingFormat(seconds)}
-  function trainingApplyClock(){let seconds=trainingParse($("#trainingTimer").value);if(seconds===null){trainingSetClock(trainingLeft||+$("#interval").value||90);$("#trainingMessage").textContent="Use MM:SS, such as 01:30.";return false}$("#interval").value=seconds;trainingSetClock(seconds);return true}
+  function trainingApplyClock(){let seconds=trainingParse($("#trainingTimer").value);if(seconds===null){trainingSetClock(trainingLeft||trainingDuration);$("#trainingMessage").textContent="Use MM:SS, such as 01:30.";return false}trainingDuration=seconds;trainingSetClock(seconds);return true}
   function trainingStop(message="Set stopped."){clearInterval(window.trainingId);trainingRunning=false;$("#trainingStop").disabled=true;$("#trainingMessage").textContent=message}
   $("#trainingTimer").addEventListener("change",trainingApplyClock);$("#trainingTimer").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();trainingApplyClock();event.target.blur()}});
-  $("#trainingReset").onclick=()=>{trainingStop();trainingRep=1;trainingSetClock(+$("#interval").value||90);$("#trainingLabel").textContent=`Repeat 1 of ${$("#repeats").value}`;$("#trainingMessage").textContent="Edit the clock, then start the set."};
+  $("#trainingReset").onclick=()=>{trainingStop();trainingRep=1;trainingSetClock(trainingDuration);$("#trainingLabel").textContent=`Repeat 1 of ${$("#repeats").value}`;$("#trainingMessage").textContent="Edit the clock, then start the set."};
   $("#trainingStop").onclick=()=>trainingStop();
-  $("#trainingStart").onclick=()=>{if(!trainingApplyClock())return;trainingRep=1;let total=+$("#repeats").value||1;trainingRunning=true;$("#trainingStop").disabled=false;clearInterval(window.trainingId);$("#trainingMessage").textContent="Set running.";window.trainingId=setInterval(()=>{trainingLeft--;$("#trainingTimer").value=trainingFormat(trainingLeft);if(trainingLeft<=0){trainingRep++;if(trainingRep>total){trainingStop("Set complete.");return}trainingLeft=+$("#interval").value||90;$("#trainingTimer").value=trainingFormat(trainingLeft);$("#trainingLabel").textContent=`Repeat ${trainingRep} of ${total}`;$("#trainingMessage").textContent=`Repeat ${trainingRep} ready.`}},1000)};
+  $("#trainingStart").onclick=()=>{if(!trainingApplyClock())return;trainingRep=1;let total=+$("#repeats").value||1;trainingRunning=true;$("#trainingStop").disabled=false;clearInterval(window.trainingId);$("#trainingMessage").textContent="Set running.";window.trainingId=setInterval(()=>{trainingLeft--;$("#trainingTimer").value=trainingFormat(trainingLeft);if(trainingLeft<=0){trainingRep++;if(trainingRep>total){trainingStop("Set complete.");return}trainingLeft=trainingDuration;$("#trainingTimer").value=trainingFormat(trainingLeft);$("#trainingLabel").textContent=`Repeat ${trainingRep} of ${total}`;$("#trainingMessage").textContent=`Repeat ${trainingRep} ready.`}},1000)};
   loadDetails();renderLanes();renderResults();$("#trainingReset").click();
 </script>
 </body>
